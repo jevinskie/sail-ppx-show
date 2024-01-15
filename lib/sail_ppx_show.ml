@@ -98,7 +98,12 @@ let side_print_ctxt =
 
     method! structure ctxt st =
       pprint_ctxt ctxt;
-      super#structure ctxt st
+      let orig = super#structure ctxt st in
+      let strct = fst orig in
+      let loc = Ast_helper.default_loc in
+      let strct_new = strct :: Ast_builder.Default.eint ~loc:!loc 1 in
+      let errs = snd orig in
+      (strct_new, errs)
 
     method! signature ctxt sg =
       pprint_ctxt ctxt;
@@ -108,7 +113,7 @@ let side_print_ctxt =
 let () =
   Driver.V2.(
     register_transformation
-      ~impl:(fun ctxt structure ->
+      ~preprocess_impl:(fun ctxt structure ->
         let structure, errors = side_print_ctxt#structure ctxt structure in
         List.map errors ~f:(fun error ->
             Ast_builder.Default.pstr_extension
@@ -116,7 +121,7 @@ let () =
               (Location.Error.to_extension error)
               [])
         @ structure)
-      ~intf:(fun ctxt signature ->
+      ~preprocess_intf:(fun ctxt signature ->
         let signature, errors = side_print_ctxt#signature ctxt signature in
         List.map errors ~f:(fun error ->
             Ast_builder.Default.psig_extension
