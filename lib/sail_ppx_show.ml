@@ -83,41 +83,26 @@ let transform a b c =
 open Stdppx
 open Ppxlib
 
-let pprint_ctxt ctxt =
-  let tool_name = Expansion_context.Base.tool_name ctxt in
-  let input_name = Expansion_context.Base.input_name ctxt in
-  let file_path =
-    Code_path.file_path @@ Expansion_context.Base.code_path @@ ctxt
-  in
-  Printf.printf "tool_name: %s\ninput_name: %s\nfile_path: %s\n" tool_name
-    input_name file_path
-
-type my_custom_structure_item = { name : string; body : Parsetree.expression }
-
-let create_custom_structure_item name body =
-  let loc = Location.none in
-  let pat = Ast_builder.Default.ppat_var ~loc { txt = name; loc } in
-  let vb = Ast_builder.Default.value_binding ~loc ~pat ~expr:body in
-  { pstr_desc = Pstr_value (Nonrecursive, [ vb ]); pstr_loc = Location.none }
+let rec last = function
+  | x :: [] -> x
+  | _ :: xs -> last xs
+  | [] -> failwith "no element"
 
 let side_print_ctxt =
   object
     inherit Ast_traverse.map_with_expansion_context_and_errors as super
 
     method! structure ctxt st =
-      pprint_ctxt ctxt;
       let orig = super#structure ctxt st in
       let orig_struct, orig_err = (fst orig, snd orig) in
-      let my_structure_item =
-        create_custom_structure_item "my_variable"
-          (Ast_builder.Default.eint ~loc:Location.none 42)
+      let new_stucture_item =
+        let loc = { (last orig_struct).pstr_loc with loc_ghost = true } in
+        [%stri let answer = 42]
       in
-      let new_struct = orig_struct @ [ my_structure_item ] in
+      let new_struct = orig_struct @ [ new_stucture_item ] in
       (new_struct, orig_err)
 
-    method! signature ctxt sg =
-      pprint_ctxt ctxt;
-      super#signature ctxt sg
+    method! signature ctxt sg = super#signature ctxt sg
   end
 
 let () =
