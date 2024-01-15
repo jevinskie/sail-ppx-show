@@ -1,0 +1,5 @@
+(library
+ (public_name sail_ppx_show)
+ (name sail_ppx_show)
+ (kind ppx_rewriter)
+ (libraries ppxlib))
