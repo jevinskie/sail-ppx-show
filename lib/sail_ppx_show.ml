@@ -92,6 +92,14 @@ let pprint_ctxt ctxt =
   Printf.printf "tool_name: %s\ninput_name: %s\nfile_path: %s\n" tool_name
     input_name file_path
 
+type my_custom_structure_item = { name : string; body : Parsetree.expression }
+
+let create_custom_structure_item name body =
+  let loc = Location.none in
+  let pat = Ast_builder.Default.ppat_var ~loc { txt = name; loc } in
+  let vb = Ast_builder.Default.value_binding ~loc ~pat ~expr:body in
+  { pstr_desc = Pstr_value (Nonrecursive, [ vb ]); pstr_loc = Location.none }
+
 let side_print_ctxt =
   object
     inherit Ast_traverse.map_with_expansion_context_and_errors as super
@@ -99,7 +107,13 @@ let side_print_ctxt =
     method! structure ctxt st =
       pprint_ctxt ctxt;
       let orig = super#structure ctxt st in
-      orig
+      let orig_struct, orig_err = (fst orig, snd orig) in
+      let my_structure_item =
+        create_custom_structure_item "my_variable"
+          (Ast_builder.Default.eint ~loc:Location.none 42)
+      in
+      let new_struct = orig_struct @ [ my_structure_item ] in
+      (new_struct, orig_err)
 
     method! signature ctxt sg =
       pprint_ctxt ctxt;
@@ -109,7 +123,7 @@ let side_print_ctxt =
 let () =
   Driver.V2.(
     register_transformation
-      ~preprocess_impl:(fun ctxt structure ->
+      ~impl:(fun ctxt structure ->
         let structure, errors = side_print_ctxt#structure ctxt structure in
         List.map errors ~f:(fun error ->
             Ast_builder.Default.pstr_extension
@@ -117,7 +131,7 @@ let () =
               (Location.Error.to_extension error)
               [])
         @ structure)
-      ~preprocess_intf:(fun ctxt signature ->
+      ~intf:(fun ctxt signature ->
         let signature, errors = side_print_ctxt#signature ctxt signature in
         List.map errors ~f:(fun error ->
             Ast_builder.Default.psig_extension
