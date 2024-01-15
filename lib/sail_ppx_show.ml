@@ -99,11 +99,7 @@ let side_print_ctxt =
     method! structure ctxt st =
       pprint_ctxt ctxt;
       let orig = super#structure ctxt st in
-      let strct = fst orig in
-      let loc = Ast_helper.default_loc in
-      let strct_new = strct :: Ast_builder.Default.eint ~loc:!loc 1 in
-      let errs = snd orig in
-      (strct_new, errs)
+      orig
 
     method! signature ctxt sg =
       pprint_ctxt ctxt;
