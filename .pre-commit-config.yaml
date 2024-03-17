@@ -30,7 +30,7 @@ repos:
   hooks:
   - id: ocamlformat
 - repo: https://github.com/jevinskie/pre-commit-dune-format-dune-file
-  rev: v0.1.5
+  rev: v0.1.6
   hooks:
   - id: dune-format-dune-file
 - repo: https://github.com/pre-commit/pre-commit-hooks
