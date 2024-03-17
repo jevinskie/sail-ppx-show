@@ -1,26 +1,26 @@
-open Stdppx
+(* open Stdppx *)
 open Ppxlib
 
 let () = Driver.enable_checks ()
 
-(* let expand ~ctxt env_var =
-     let loc = Expansion_context.Extension.extension_point_loc ctxt in
-     match Sys.getenv env_var with
-     | value -> Ast_builder.Default.estring ~loc value
-     | exception Not_found ->
-         let ext =
-           Location.error_extensionf ~loc "The environement variable %s is unbound"
-             env_var
-         in
-         Ast_builder.Default.pexp_extension ~loc ext
+let expand ~ctxt env_var =
+  let loc = Expansion_context.Extension.extension_point_loc ctxt in
+  match Sys.getenv env_var with
+  | value -> Ast_builder.Default.estring ~loc value
+  | exception Not_found ->
+      let ext =
+        Location.error_extensionf ~loc "The environement variable %s is unbound"
+          env_var
+      in
+      Ast_builder.Default.pexp_extension ~loc ext
 
-   let my_extension =
-     Extension.V3.declare "get_env" Extension.Context.expression
-       Ast_pattern.(single_expr_payload (estring __))
-       expand
+let my_extension =
+  Extension.V3.declare "get_env" Extension.Context.expression
+    Ast_pattern.(single_expr_payload (estring __))
+    expand
 
-   let rule = Ppxlib.Context_free.Rule.extension my_extension
-   let () = Driver.register_transformation ~rules:[ rule ] "get_env" *)
+let rule = Ppxlib.Context_free.Rule.extension my_extension
+let () = Driver.register_transformation ~rules:[ rule ] "get_env"
 
 (*
 let transform a b c =
@@ -310,32 +310,32 @@ let () =
 
    let () = Driver.register_transformation "add_deriving_show" *)
 
-let generator =
-  let extension ~ctxt:_ type_decl =
-    let loc = type_decl.ptype_loc in
-    let deriving_attr =
-      {
-        attr_name = { txt = "deriving"; loc };
-        attr_payload =
-          PStr
-            [
-              Ast_builder.Default.pstr_eval ~loc
-                (Ast_builder.Default.pexp_construct ~loc
-                   { txt = Lident "show"; loc }
-                   None)
-                [];
-            ];
-        attr_loc = loc;
-      }
-    in
-    {
-      type_decl with
-      ptype_attributes = deriving_attr :: type_decl.ptype_attributes;
-    }
-  in
-  Deriving.Generator.make_noarg (fun ~loc ~path:"foo" type_decls ->
-      List.map f (extension ctxt) type_decls)
+(* let generator =
+     let extension ~ctxt:_ type_decl =
+       let loc = type_decl.ptype_loc in
+       let deriving_attr =
+         {
+           attr_name = { txt = "deriving"; loc };
+           attr_payload =
+             PStr
+               [
+                 Ast_builder.Default.pstr_eval ~loc
+                   (Ast_builder.Default.pexp_construct ~loc
+                      { txt = Lident "show"; loc }
+                      None)
+                   [];
+               ];
+           attr_loc = loc;
+         }
+       in
+       {
+         type_decl with
+         ptype_attributes = deriving_attr :: type_decl.ptype_attributes;
+       }
+     in
+     Deriving.Generator.make_noarg (fun ~loc ~path:"foo" type_decls ->
+         List.map f (extension ctxt) type_decls)
 
-let () =
-  Deriving.add "show" ~str_type_decl:generator
-  |> Driver.register_transformation "add_deriving_show"
+   let () =
+     Deriving.add "show" ~str_type_decl:generator
+     |> Driver.register_transformation "add_deriving_show" *)
